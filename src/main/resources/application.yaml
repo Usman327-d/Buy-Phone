@@ -1,0 +1,33 @@
+
+server:
+  port: 8080
+
+
+spring:
+  application:
+    name: buyPhone
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/buyPhone_db
+    username: ${db_username}
+    password: ${db_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update   # auto detect entity changes and update schema
+    show-sql: true
+
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  sql:
+    init:
+      mode: never
+
+
+

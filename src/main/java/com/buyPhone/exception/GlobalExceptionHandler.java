@@ -2,13 +2,16 @@ package com.buyPhone.exception;
 
 
 import com.buyPhone.dto.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -17,6 +20,7 @@ public class GlobalExceptionHandler {
             String message,
             HttpServletRequest request
     ) {
+
         return new ErrorResponse(
                 LocalDateTime.now(),
                 status.value(),
@@ -31,6 +35,9 @@ public class GlobalExceptionHandler {
             ResourceNotFoundException ex,
             HttpServletRequest request
     ) {
+        log.error(String.valueOf(ex.getMessage()));
+        log.error(Arrays.toString(ex.getStackTrace()));
+
         return new ResponseEntity<>(
                 buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request),
                 HttpStatus.NOT_FOUND
@@ -42,6 +49,9 @@ public class GlobalExceptionHandler {
             BadRequestException ex,
             HttpServletRequest request
     ) {
+        log.error(String.valueOf(ex.getMessage()));
+        log.error(Arrays.toString(ex.getStackTrace()));
+
         return new ResponseEntity<>(
                 buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request),
                 HttpStatus.BAD_REQUEST
@@ -53,6 +63,9 @@ public class GlobalExceptionHandler {
             ConflictException ex,
             HttpServletRequest request
     ) {
+        log.error(String.valueOf(ex.getMessage()));
+        log.error(Arrays.toString(ex.getStackTrace()));
+
         return new ResponseEntity<>(
                 buildError(HttpStatus.CONFLICT, ex.getMessage(), request),
                 HttpStatus.CONFLICT
@@ -64,6 +77,9 @@ public class GlobalExceptionHandler {
             UnauthorizedException ex,
             HttpServletRequest request
     ) {
+        log.error(String.valueOf(ex.getMessage()));
+        log.error(Arrays.toString(ex.getStackTrace()));
+
         return new ResponseEntity<>(
                 buildError(HttpStatus.UNAUTHORIZED, ex.getMessage(), request),
                 HttpStatus.UNAUTHORIZED
@@ -75,6 +91,9 @@ public class GlobalExceptionHandler {
             ForbiddenException ex,
             HttpServletRequest request
     ) {
+        log.error(String.valueOf(ex.getMessage()));
+        log.error(Arrays.toString(ex.getStackTrace()));
+
         return new ResponseEntity<>(
                 buildError(HttpStatus.FORBIDDEN, ex.getMessage(), request),
                 HttpStatus.FORBIDDEN
@@ -86,6 +105,9 @@ public class GlobalExceptionHandler {
             InventoryException ex,
             HttpServletRequest request
     ) {
+        log.error(String.valueOf(ex.getMessage()));
+        log.error(Arrays.toString(ex.getStackTrace()));
+
         return new ResponseEntity<>(
                 buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request),
                 HttpStatus.BAD_REQUEST
@@ -106,6 +128,9 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .orElse("Validation error");
 
+        log.error(String.valueOf(ex.getMessage()));
+        log.error(Arrays.toString(ex.getStackTrace()));
+
         return new ResponseEntity<>(
                 buildError(HttpStatus.BAD_REQUEST, message, request),
                 HttpStatus.BAD_REQUEST
@@ -118,6 +143,9 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+        log.error(String.valueOf(ex.getMessage()));
+        log.error(Arrays.toString(ex.getStackTrace()));
+
         return new ResponseEntity<>(
                 buildError(HttpStatus.CONFLICT, "Database constraint violation", request),
                 HttpStatus.CONFLICT
@@ -130,6 +158,9 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+
+        log.error(String.valueOf(ex.getMessage()));
+        log.error(Arrays.toString(ex.getStackTrace()));
 
         return new ResponseEntity<>(
                 buildError(HttpStatus.INTERNAL_SERVER_ERROR,

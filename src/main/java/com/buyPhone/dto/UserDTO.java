@@ -19,10 +19,12 @@ public class UserDTO {
     private String email;
     private String firstName;
     private String lastName;
+    private String passwordHash;
     private String role;
     private LocalDateTime createdAt;
 
     private List<OrderDTO> orders;
 
     private List<AddressDTO> addresses;
+
 }

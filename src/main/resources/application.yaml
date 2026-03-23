@@ -31,3 +31,10 @@ spring:
 
 
 
+# env variables
+jwt:
+  secret:
+    key: ${jwt_secret_key}
+
+
+

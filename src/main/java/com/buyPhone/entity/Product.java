@@ -37,6 +37,9 @@ public class Product {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(columnDefinition = "jsonb")
+    private String attributes;  // dynamic fields, like brand, condition, model
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;

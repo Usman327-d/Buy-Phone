@@ -19,6 +19,7 @@ public class UserMapper {
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .passwordHash(user.getPasswordHash())
                 .role(String.valueOf(user.getRole()))
                 .createdAt(user.getCreatedAt())
                 .orders(user.getOrders() != null
@@ -42,6 +43,7 @@ public class UserMapper {
         user.setEmail(dto.getEmail());
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
+        user.setPasswordHash(dto.getPasswordHash());
         user.setRole(UserRole.valueOf(dto.getRole()));
         return user;
     }

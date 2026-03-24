@@ -57,4 +57,10 @@ public class CategoryService implements ICategoryService {
             throw new ResourceNotFoundException("Category", id.toString());
         repository.deleteById(id);
     }
+
+    // get distinct category name for search and add purpose
+    @Override
+    public List<String> getDistinctCategoryNames() {
+       return repository.getDistinctCategoryNames();
+    }
 }

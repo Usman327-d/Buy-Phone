@@ -18,5 +18,7 @@ public interface ICategoryService {
     CategoryDTO updateCategory(UUID id, CategoryDTO dto);
 
     void deleteCategory(UUID id);
+
+    List<String> getDistinctCategoryNames();
 }
 

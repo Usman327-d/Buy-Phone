@@ -33,7 +33,7 @@ public class SecurityConfig {
                 // Endpoint authorization
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/categories/**", "/api/products/**", "/api/users/**", "/api/orders/**").permitAll()
                         // Admin-only endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Customer or Admin endpoints

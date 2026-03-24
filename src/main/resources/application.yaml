@@ -36,5 +36,13 @@ jwt:
   secret:
     key: ${jwt_secret_key}
 
+# cloudinary credentials
+cloudinary:
+  cloud:
+    name: ${cloudinary_cloud_name}
+
+  api:
+    key: ${cloudinary_cloud_api}
+    secret: ${cloudinary_cloud_secret}
 
 

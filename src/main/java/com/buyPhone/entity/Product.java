@@ -4,9 +4,12 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -37,8 +40,8 @@ public class Product {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(columnDefinition = "jsonb")
-    private String attributes;  // dynamic fields, like brand, condition, model
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> attributes;  // dynamic fields, like brand, condition, model
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")

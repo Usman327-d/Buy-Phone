@@ -153,6 +153,21 @@ public class GlobalExceptionHandler {
     }
 
 
+    // handler to handle cloudinary cloud exception
+    @ExceptionHandler(CloudServiceException.class)
+    public ResponseEntity<ErrorResponse> handleCloudError(
+            CloudServiceException ex,
+            HttpServletRequest request) { // Removed 'String message'
+
+        // Use ex.getMessage() to populate your error response if needed
+        log.error("Cloud Service Error: {}", ex.getMessage());
+
+        return new ResponseEntity<>(
+                buildError(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request),
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(
             Exception ex,
@@ -169,6 +184,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
+
 
 
 }

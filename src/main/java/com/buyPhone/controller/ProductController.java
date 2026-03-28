@@ -1,81 +1,140 @@
 package com.buyPhone.controller;
 
-import com.buyPhone.dto.ApiResponse;
-import com.buyPhone.dto.ProductDTO;
-import com.buyPhone.service.impl.ProductService;
+import com.buyPhone.dto.*;
+import com.buyPhone.service.interfac.IProductService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private final ProductService service;
+    private final IProductService productService;
 
-    public ProductController(ProductService service) {
-        this.service = service;
-    }
+    // CREATE PRODUCT (Admin Only)
+    // Uses consumes = MULTIPART_FORM_DATA_VALUE to handle image and JSON
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<ProductDetailDTO> createProduct(
+            @RequestPart("image") MultipartFile image,
+            @RequestPart("product") ProductDetailDTO dto) {
 
-    @PostMapping
-    public ApiResponse<ProductDTO> createProduct(@RequestBody ProductDTO dto) {
-        return ApiResponse.<ProductDTO>builder()
+        return ApiResponse.<ProductDetailDTO>builder()
                 .success(true)
                 .message("Product created successfully")
-                .data(service.createProduct(dto))
-                .timestamp(java.time.LocalDateTime.now())
+                .data(productService.createProduct(image, dto))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
+    // GET ALL PRODUCTS (Customer View - Summarized)
+    @GetMapping
+    public ApiResponse<Page<ProductSummaryDTO>> getAllProducts(Pageable pageable) {
+        return ApiResponse.<Page<ProductSummaryDTO>>builder()
+                .success(true)
+                .message("Products fetched successfully")
+                .data(productService.getAllProductSummary(pageable))
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    // GET PRODUCT DETAILS (Customer View - Full Details)
     @GetMapping("/{id}")
-    public ApiResponse<ProductDTO> getProduct(@PathVariable UUID id) {
-        return ApiResponse.<ProductDTO>builder()
+    public ApiResponse<ProductDetailDTO> getProductDetails(@PathVariable UUID id) {
+        return ApiResponse.<ProductDetailDTO>builder()
                 .success(true)
-                .message("Product fetched successfully")
-                .data(service.getProduct(id))
-                .timestamp(java.time.LocalDateTime.now())
+                .message("Product details fetched successfully")
+                .data(productService.getProductDetails(id))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
-    @GetMapping("/category/{categoryId}")
-    public ApiResponse<List<ProductDTO>> getProductsByCategory(@PathVariable UUID categoryId) {
-        return ApiResponse.<List<ProductDTO>>builder()
-                .success(true)
-                .message("Products fetched by category")
-                .data(service.getProductsByCategory(categoryId))
-                .timestamp(java.time.LocalDateTime.now())
-                .build();
-    }
-
+    // SEARCH PRODUCTS
     @GetMapping("/search")
-    public ApiResponse<List<ProductDTO>> searchProducts(@RequestParam String keyword) {
-        return ApiResponse.<List<ProductDTO>>builder()
+    public ApiResponse<Page<ProductDetailDTO>> searchProducts(
+            @RequestParam String keyword,
+            Pageable pageable) {
+        return ApiResponse.<Page<ProductDetailDTO>>builder()
                 .success(true)
-                .message("Products search results")
-                .data(service.searchProducts(keyword))
-                .timestamp(java.time.LocalDateTime.now())
+                .message("Search results fetched")
+                .data(productService.searchProducts(keyword, pageable))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
+    // GET PRODUCTS BY CATEGORY
+    @GetMapping("/category/{categoryId}")
+    public ApiResponse<Page<ProductDetailDTO>> getProductsByCategory(
+            @PathVariable UUID categoryId,
+            Pageable pageable) {
+        return ApiResponse.<Page<ProductDetailDTO>>builder()
+                .success(true)
+                .message("Products for category fetched")
+                .data(productService.getProductsByCategory(categoryId, pageable))
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    // ADMIN VIEW (Full details including Inventory)
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Page<ProductAdminDTO>> getAllProductsForAdmin(Pageable pageable) {
+        return ApiResponse.<Page<ProductAdminDTO>>builder()
+                .success(true)
+                .message("Admin product list fetched")
+                .data(productService.getAllProductsForAdmin(pageable))
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    // UPDATE PRODUCT
     @PutMapping("/{id}")
-    public ApiResponse<ProductDTO> updateProduct(@PathVariable UUID id, @RequestBody ProductDTO dto) {
-        return ApiResponse.<ProductDTO>builder()
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<ProductDetailDTO> updateProduct(
+            @PathVariable UUID id,
+            @RequestBody ProductDetailDTO dto) {
+        return ApiResponse.<ProductDetailDTO>builder()
                 .success(true)
                 .message("Product updated successfully")
-                .data(service.updateProduct(id, dto))
-                .timestamp(java.time.LocalDateTime.now())
+                .data(productService.updateProduct(id, dto))
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 
+    // UPDATE STOCK ONLY (Fast Operation)
+    @PatchMapping("/{id}/stock")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> updateStock(
+            @PathVariable UUID id,
+            @RequestParam Integer quantity) {
+        productService.updateStock(id, quantity);
+        return ApiResponse.<Void>builder()
+                .success(true)
+                .message("Stock updated successfully")
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    // DELETE PRODUCT
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteProduct(@PathVariable UUID id) {
-        service.deleteProduct(id);
+        productService.deleteProduct(id);
         return ApiResponse.<Void>builder()
                 .success(true)
                 .message("Product deleted successfully")
-                .data(null)
-                .timestamp(java.time.LocalDateTime.now())
+                .timestamp(LocalDateTime.now())
                 .build();
     }
 }

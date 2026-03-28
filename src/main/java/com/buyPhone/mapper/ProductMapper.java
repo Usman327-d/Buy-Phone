@@ -1,32 +1,88 @@
 package com.buyPhone.mapper;
 
-import com.buyPhone.dto.ProductDTO;
+import com.buyPhone.dto.ProductDetailDTO;
 import com.buyPhone.entity.Product;
+import com.buyPhone.dto.ProductAdminDTO;
+import com.buyPhone.dto.ProductSummaryDTO;
+import org.springframework.stereotype.Component;
 
+
+@Component
 public class ProductMapper {
 
-    public ProductDTO toDTO(Product product){
-        if(product == null) return null;
+    // 1. LIGHTWEIGHT: For Customer List Views
+    public ProductSummaryDTO toSummaryDTO(Product product) {
+        if (product == null) return null;
 
-        return ProductDTO.builder()
-                .id(product.getId() != null ? product.getId().toString() : null)
+        return ProductSummaryDTO.builder()
+                .id(product.getId())
                 .name(product.getName())
-                .description(product.getDescription())
                 .price(product.getPrice())
-                .categoryId(product.getCategory() != null ? product.getCategory().getId().toString() : null)
-                .createdAt(product.getCreatedAt())
+                .imageUrl(product.getImageUrl())
                 .build();
     }
 
-    public Product toEntity(ProductDTO dto){
-        if(dto == null) return null;
+    // 2. DETAILED: For Customer Product Pages
+    public ProductDetailDTO toDetailDTO(Product product) {
+        if (product == null) return null;
+
+        return ProductDetailDTO.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .imageUrl(product.getImageUrl())
+                .createdAt(product.getCreatedAt())
+                .attributes(product.getAttributes())
+                .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
+                .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
+                .build();
+    }
+
+    // 3. ADMIN: Full View with Inventory
+    public ProductAdminDTO toAdminDTO(Product product) {
+        if (product == null) return null;
+
+        // Start with Detail DTO data
+        ProductDetailDTO detail = toDetailDTO(product);
+
+        ProductAdminDTO adminDto = new ProductAdminDTO();
+        // Copy fields from detail (using a helper or manual set)
+        adminDto.setId(detail.getId());
+        adminDto.setName(detail.getName());
+        adminDto.setDescription(detail.getDescription());
+        adminDto.setPrice(detail.getPrice());
+        adminDto.setImageUrl(detail.getImageUrl());
+        adminDto.setCreatedAt(detail.getCreatedAt());
+        adminDto.setAttributes(detail.getAttributes());
+        adminDto.setCategoryId(detail.getCategoryId());
+        adminDto.setCategoryName(detail.getCategoryName());
+
+        // Add Admin specific fields
+        if (product.getInventory() != null) {
+            // Assuming you have an InventoryMapper or simple conversion
+            adminDto.setInitialQuantity(product.getInventory().getQuantity());
+        }
+
+        return adminDto;
+    }
+
+    // 4. ENTITY: Convert Input DTO back to Database Object
+    public Product toEntity(ProductDetailDTO dto) {
+        if (dto == null) return null;
 
         Product product = new Product();
-        product.setId(dto.getId() != null ? java.util.UUID.fromString(dto.getId()) : null);
+        // Handle UUID safety: don't convert if null or empty
+        if (dto.getId() != null) {
+            product.setId(dto.getId());
+        }
+
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
         product.setPrice(dto.getPrice());
-        // category should be set in service using repository
+        product.setAttributes(dto.getAttributes());
+        product.setImageUrl(dto.getImageUrl());
+
         return product;
     }
 }

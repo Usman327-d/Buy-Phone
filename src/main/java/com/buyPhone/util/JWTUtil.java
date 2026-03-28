@@ -14,7 +14,7 @@ import java.util.function.Function;
 @Component
 public class JWTUtil {
 
-    private static final long EXPIRATION_TIME = 1000L * 60 * 15; // 15 minutes
+    private static final long EXPIRATION_TIME = 1000L * 60 * 60; // 15 minutes
 
     private static final String ISSUER = "buyphone-api";
     private static final String AUDIENCE = "buyphone-client";

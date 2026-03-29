@@ -20,5 +20,7 @@ public interface ICategoryService {
     void deleteCategory(UUID id);
 
     List<String> getDistinctCategoryNames();
+
+    public List<CategoryDTO> getFullCategoryTree();
 }
 

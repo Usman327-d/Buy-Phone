@@ -39,6 +39,7 @@ public class ProductController {
     }
 
     // GET ALL PRODUCTS (Customer View - Summarized)
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @GetMapping
     public ApiResponse<Page<ProductSummaryDTO>> getAllProducts(Pageable pageable) {
         return ApiResponse.<Page<ProductSummaryDTO>>builder()
@@ -50,6 +51,7 @@ public class ProductController {
     }
 
     // GET PRODUCT DETAILS (Customer View - Full Details)
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @GetMapping("/{id}")
     public ApiResponse<ProductDetailDTO> getProductDetails(@PathVariable UUID id) {
         return ApiResponse.<ProductDetailDTO>builder()
@@ -62,18 +64,31 @@ public class ProductController {
 
     // SEARCH PRODUCTS
     @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     public ApiResponse<Page<ProductDetailDTO>> searchProducts(
             @RequestParam String keyword,
             Pageable pageable) {
+
+        Page<ProductDetailDTO> productDetailDTOS = productService.searchProducts(keyword, pageable);
+        if(productDetailDTOS == null){
+            return ApiResponse.<Page<ProductDetailDTO>>builder()
+                    .success(true)
+                    .message("No such products, try with another keyword")
+                    .data(null)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+        }
+
         return ApiResponse.<Page<ProductDetailDTO>>builder()
                 .success(true)
                 .message("Search results fetched")
-                .data(productService.searchProducts(keyword, pageable))
+                .data((productService.searchProducts(keyword, pageable)))
                 .timestamp(LocalDateTime.now())
                 .build();
     }
 
     // GET PRODUCTS BY CATEGORY
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @GetMapping("/category/{categoryId}")
     public ApiResponse<Page<ProductDetailDTO>> getProductsByCategory(
             @PathVariable UUID categoryId,
@@ -103,11 +118,12 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductDetailDTO> updateProduct(
             @PathVariable UUID id,
-            @RequestBody ProductDetailDTO dto) {
+            @RequestPart("image") MultipartFile image,
+            @RequestPart("product") ProductDetailDTO dto) {
         return ApiResponse.<ProductDetailDTO>builder()
                 .success(true)
                 .message("Product updated successfully")
-                .data(productService.updateProduct(id, dto))
+                .data(productService.updateProduct(id, dto, image))
                 .timestamp(LocalDateTime.now())
                 .build();
     }

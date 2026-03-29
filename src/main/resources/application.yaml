@@ -29,6 +29,12 @@ spring:
     init:
       mode: never
 
+# security logging
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
 
 
 # env variables

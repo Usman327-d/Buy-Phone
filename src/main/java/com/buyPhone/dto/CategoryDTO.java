@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @Builder
@@ -14,10 +15,10 @@ import java.util.List;
 @NoArgsConstructor
 public class CategoryDTO {
 
-    private String id;
+    private UUID id;
     private String name;
 
-    private String parentId;
+    private UUID parentId;
 
     private List<CategoryDTO> children;
 }

@@ -47,6 +47,15 @@ public class CategoryController {
                 .timestamp(java.time.LocalDateTime.now())
                 .build();
     }
+    @GetMapping("/tree")
+    public ApiResponse<List<CategoryDTO>> getAllCategoriesTree() {
+        return ApiResponse.<List<CategoryDTO>>builder()
+                .success(true)
+                .message("Categories fetched successfully")
+                .data(service.getFullCategoryTree())
+                .timestamp(java.time.LocalDateTime.now())
+                .build();
+    }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

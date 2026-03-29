@@ -8,6 +8,7 @@ import com.buyPhone.repository.CategoryRepository;
 import com.buyPhone.service.interfac.ICategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,13 +20,23 @@ import java.util.stream.Collectors;
 public class CategoryService implements ICategoryService {
 
     private final CategoryRepository repository;
-    private final CategoryMapper mapper = new CategoryMapper();
+    private final CategoryMapper mapper;
 
 
     @Override
+    @Transactional
     public CategoryDTO createCategory(CategoryDTO dto) {
         Category category = mapper.toEntity(dto);
-        return mapper.toDTO(repository.save(category));
+
+        // Handle the parent link for subcategories (iPhone, Samsung, etc.)
+        if (dto.getParentId() != null) {
+            Category parent = repository.findById(dto.getParentId())
+                    .orElseThrow(() -> new RuntimeException("Parent category not found"));
+            category.setParent(parent);
+        }
+
+        Category saved = repository.save(category);
+        return mapper.toDTO(saved);
     }
 
     @Override
@@ -62,5 +73,16 @@ public class CategoryService implements ICategoryService {
     @Override
     public List<String> getDistinctCategoryNames() {
        return repository.getDistinctCategoryNames();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoryDTO> getFullCategoryTree() {
+        // Fetch root categories (where parent is null)
+        List<Category> roots = repository.findByParentIsNull();
+
+        return roots.stream()
+                .map(mapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

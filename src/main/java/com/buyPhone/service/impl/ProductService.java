@@ -47,8 +47,11 @@ public class ProductService implements IProductService {
     @Transactional
     public ProductDetailDTO createProduct(MultipartFile image, ProductDetailDTO dto) {
 
-        Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found", dto.getId().toString()));
+        Category category = categoryRepository.findByIdOrName(dto.getCategoryId(), dto.getCategoryName());
+
+        if(category == null)
+            throw  new ResourceNotFoundException("Category not found by name or id", dto.getCategoryId().toString());
+
 
         // map product
         Product product = productMapper.toEntity(dto);
@@ -68,10 +71,14 @@ public class ProductService implements IProductService {
 
         // inventory
         Inventory inventory = new Inventory();
+
+        inventory.setProductId(product.getId());
         inventory.setQuantity(dto.getInitialQuantity() != null ? dto.getInitialQuantity() : 0);
         inventory.setProduct(product);
-        product.setInventory(inventory);
+        // save inventory
+        inventoryRepository.save(inventory);
 
+        product.setInventory(inventory);
         Product savedProduct = productRepository.save(product);
 
         return productMapper.toDetailDTO(savedProduct);
@@ -79,7 +86,7 @@ public class ProductService implements IProductService {
 
     @Override
     @Transactional
-    public ProductDetailDTO updateProduct(UUID id, ProductDetailDTO dto) {
+    public ProductDetailDTO updateProduct(UUID id, ProductDetailDTO dto, MultipartFile image) {
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found", id.toString()));
 
@@ -87,6 +94,26 @@ public class ProductService implements IProductService {
         existingProduct.setDescription(dto.getDescription());
         existingProduct.setPrice(dto.getPrice());
         existingProduct.setAttributes(dto.getAttributes());
+
+        // check weather image is present
+        if (!image.isEmpty() && image != null){
+
+            // delete exiting image first
+            uploadProductImageService.deleteImage(dto.getImageUrl());
+
+            // image upload
+            Map<String, Object> cloudResponse =  uploadProductImageService.uploadImage(image, "Products");
+            Object objUrl = cloudResponse.get("secure_url");
+            if(cloudResponse == null || objUrl == null){
+                throw new AppException("Image Cloud is down or sending response null");
+            }
+
+            // extract imageUrl from cloud response
+            String imageUrl = objUrl.toString();
+            existingProduct.setImageUrl(imageUrl);
+        }
+        else
+            existingProduct.setImageUrl(dto.getImageUrl());
 
         if (dto.getCategoryId() != null) {
             Category category = categoryRepository.findById(dto.getCategoryId())
@@ -130,16 +157,19 @@ public class ProductService implements IProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductDetailDTO> searchProducts(String keyword, Pageable pageable) {
-        return productRepository.searchByNameOrDescription(keyword, pageable)
+    public Page<ProductDetailDTO> getProductsByCategory(UUID categoryId, Pageable pageable) {
+        return productRepository.findByCategoryId(categoryId, pageable)
                 .map(productMapper::toDetailDTO);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductDetailDTO> getProductsByCategory(UUID categoryId, Pageable pageable) {
-        return productRepository.findByCategoryId(categoryId, pageable)
-                .map(productMapper::toDetailDTO);
+    public Page<ProductDetailDTO> searchProducts(String keyword, Pageable pageable) {
+
+        Page<Product> products = productRepository.searchByNameOrDescription(keyword, pageable);
+        if(products == null)
+            return  null;
+        return products.map(productMapper::toDetailDTO);
     }
 
     @Override

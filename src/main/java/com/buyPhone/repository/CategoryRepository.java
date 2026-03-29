@@ -11,4 +11,8 @@ public interface CategoryRepository extends JpaRepository <Category, UUID>{
 
     @Query("SELECT DISTINCT c.name FROM Category c")
     List<String> getDistinctCategoryNames();
+
+    List<Category> findByParentIsNull();
+
+    Category findByIdOrName(UUID id, String name);
 }

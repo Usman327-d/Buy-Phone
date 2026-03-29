@@ -26,50 +26,41 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+                                    FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
 
-        // No token → continue (public endpoints may exist)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String token = authHeader.substring(7);
+        // Clean the token string
+        final String token = authHeader.substring(7).trim();
 
         try {
-            // 🔐 Strict validation (issuer, audience, signature, expiry)
             Claims claims = jwtUtil.validateToken(token);
-
             String userId = claims.getSubject();
             String role = claims.get("role", String.class);
 
-            // 🔹 Prevent re-authentication
             if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Ensure the role is present to avoid NullPointerException
+                if (role == null) throw new RuntimeException("Role claim is missing");
 
-                var authorities = List.of(
-                        new SimpleGrantedAuthority("ROLE_" + role)
-                );
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        userId,
-                        null,
-                        authorities
-                );
-
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                // Use userId (String) as principal
+                var authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-
         } catch (Exception ex) {
-
+            // Log the error so you know IF it was an expiry, a signature issue, or a null pointer
+            logger.warn("Security Filter: Authentication failed for token. Reason: {}" +  ex.getMessage());
             SecurityContextHolder.clearContext();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            // Option: continue the chain as anonymous, or block. Blocking is safer for protected APIs.
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or Expired Token");
             return;
         }
 

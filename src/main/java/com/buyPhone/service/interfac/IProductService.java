@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface IProductService {
     // Write Operations
     ProductDetailDTO createProduct(MultipartFile image, ProductDetailDTO dto);
-    ProductDetailDTO updateProduct(UUID id, ProductDetailDTO dto);
+    ProductDetailDTO updateProduct(UUID id, ProductDetailDTO dto, MultipartFile image);
     void deleteProduct(UUID id);
     void updateStock(UUID productId, Integer quantity); // For inventory management
 

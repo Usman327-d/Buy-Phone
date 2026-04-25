@@ -7,6 +7,9 @@ spring:
   application:
     name: buyPhone
 
+  jackson:
+    default-property-inclusion: non_null # null not appear in api response
+
   datasource:
     url: jdbc:postgresql://localhost:5432/buyPhone_db
     username: ${db_username}
@@ -50,5 +53,14 @@ cloudinary:
   api:
     key: ${cloudinary_cloud_api}
     secret: ${cloudinary_cloud_secret}
+
+stripe:
+  secret:
+    key: ${stripe_secret_key}
+  webhook:
+    secret: ${stripe_webhook_secret}
+
+frontend:
+  url: http://localhost:5173
 
 

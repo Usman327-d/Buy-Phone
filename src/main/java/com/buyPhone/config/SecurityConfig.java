@@ -24,14 +24,15 @@ public class SecurityConfig {
 
         http
                 // Disable CSRF because we are stateless (REST API)
+                //.csrf(csrf -> csrf.ignoringRequestMatchers("/api/payments/webhook/**"))
                 .csrf(csrf -> csrf.disable())
-
                 // Stateless session management
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // Endpoint authorization
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/payments/webhook/**").permitAll()
                         // Public endpoints
                         .requestMatchers("/api/auth/**", "/api/categories/**", "/api/products/**", "/api/users/**", "/api/orders/**").permitAll()
                         // Admin-only endpoints
@@ -42,6 +43,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+                // Access Denied Exception
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            throw accessDeniedException;
+                        })
+                )
 
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

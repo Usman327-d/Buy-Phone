@@ -16,7 +16,7 @@ import java.util.UUID;
         name = "orders",
         indexes = {
                 @Index(name = "idx_order_user", columnList = "user_id"),
-                @Index(name = "idx_order_status", columnList = "status")
+                @Index(name = "idx_order_status", columnList = "status, created_at")
         }
 )
 @Data
@@ -42,7 +42,7 @@ public class Order {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL) // Add CascadeType.ALL or PERSIST
     @JoinColumn(name = "shipping_address_id")
     private Address shippingAddress;
 

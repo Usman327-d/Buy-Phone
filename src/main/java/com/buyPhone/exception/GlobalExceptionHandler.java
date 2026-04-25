@@ -1,10 +1,13 @@
 package com.buyPhone.exception;
 
 
+import com.buyPhone.dto.ApiResponse;
 import com.buyPhone.dto.ErrorResponse;
+import com.stripe.exception.StripeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -165,6 +168,43 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(
                 buildError(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request),
                 HttpStatus.SERVICE_UNAVAILABLE
+        );
+    }
+
+    // Access Denied Exception handler
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+                .success(false)
+                .message("You do not have permission to perform this action.")
+                .timestamp(LocalDateTime.now())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN); // 403 Forbidden
+    }
+
+    // Stripe Exception
+    @ExceptionHandler(StripeException.class)
+    public ResponseEntity<ErrorResponse> handleStripeException(StripeException e,
+                                                               HttpServletRequest request) {
+        String message = "Unable to reach the payment gateway.";
+
+        // Check if the error is specifically a network/timeout issue
+        if (e.getCause() instanceof java.io.IOException) {
+            message = "Network connection issue detected. Please check your internet and try again.";
+
+            return new ResponseEntity<>(
+                    buildError(HttpStatus.SERVICE_UNAVAILABLE,
+                            message,
+                            request),
+                    HttpStatus.SERVICE_UNAVAILABLE // 503
+            );
+        }
+
+        return new ResponseEntity<>(
+                buildError(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Payment Error",
+                            request),
+                HttpStatus.INTERNAL_SERVER_ERROR // 500
         );
     }
 
